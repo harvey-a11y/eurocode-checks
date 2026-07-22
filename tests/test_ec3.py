@@ -74,6 +74,9 @@ class TestShearResistance:
         assert res.av == pytest.approx(av_hand, rel=1e-12)
         assert res.vpl_rd == pytest.approx(av_hand * 275 / math.sqrt(3) / 1e3,
                                            rel=1e-12)
+        # Independently derived hand anchor (VALIDATION.md):
+        # Vpl,Rd = 4093.6 * 275/sqrt(3) = 649,942 N = 649.9 kN
+        assert res.vpl_rd == pytest.approx(649.9, rel=0.005)
 
     def test_floor_never_governs_for_database_sections(self):
         """With the UK NA eta = 1.0, hand arithmetic shows the formula

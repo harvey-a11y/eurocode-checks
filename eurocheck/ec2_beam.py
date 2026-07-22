@@ -10,7 +10,10 @@ design, flanged sections and higher-strength concretes are out of scope.
 
 Partial factors and coefficients (UK NA):
 
-* ``alpha_cc = 0.85`` (UK NA to cl. 3.1.6(1))
+* ``alpha_cc = 0.85`` for flexure and axial load (UK NA Table NA.1,
+  cl. 3.1.6(1))
+* ``alpha_cc = 1.0`` for shear (UK NA Table NA.1 / PD 6687-1): the
+  ``VRd,max`` crushing check uses ``fcd = fck / gamma_c``
 * ``gamma_c = 1.5``, ``gamma_s = 1.15``
 * ``fcd = alpha_cc * fck / gamma_c``
 * ``fyd = fyk / gamma_s``
@@ -218,10 +221,14 @@ def shear_links(b: float, d: float, fck: float, fywk: float, asw: float,
     ``asw`` is the link area per set (all legs crossing the shear plane),
     ``s`` the link spacing.
 
-    Note: per PD 6687-1 (UK guidance to EN 1992-1-1), ``alpha_cc = 1.0`` is
-    adopted for the shear crushing limit — the 0.85 factor relates to
-    sustained flexural/axial compression, so ``VRd,max`` uses
-    ``fcd = fck / 1.5`` here (flexure elsewhere keeps 0.85).
+    Note: per the UK NA (Table NA.1, cl. 3.1.6(1)) and PD 6687-1 (UK
+    guidance to EN 1992-1-1), ``alpha_cc = 1.0`` is adopted for the
+    shear crushing limit — the 0.85 factor relates to sustained
+    flexural/axial compression, so ``VRd,max`` uses ``fcd = fck / 1.5``
+    here (flexure elsewhere keeps 0.85). At ``cot(theta) = 2.5`` this
+    reproduces the Concise EC2 closed form
+    ``vRd,max = 0.138 fck (1 - fck/250)``
+    (exact coefficient ``0.6/(1.5 * 2.9) = 0.13793``).
     """
     _check_positive(b=b, d=d, fywk=fywk, asw=asw, s=s)
     _check_fck(fck)

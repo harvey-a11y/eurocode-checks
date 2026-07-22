@@ -126,6 +126,17 @@ class TestShearLinks:
         assert res.v_rd_max == pytest.approx(vrdmax, rel=1e-12)
         assert res.v_rd == pytest.approx(min(vrds, vrdmax), rel=1e-12)
 
+    def test_vrdmax_matches_concise_coefficient_at_cot_2p5(self):
+        """At cot theta = 2.5 the code must reproduce the Concise EC2
+        closed form vRd,max = 0.138 fck (1 - fck/250), which embeds
+        alpha_cc = 1.0 for shear (exact coefficient
+        0.6 / (1.5 * 2.9) = 0.13793)."""
+        res = ec2_beam.shear_links(b=300, d=450, fck=30, fywk=500,
+                                   asw=157, s=200, cot_theta=2.5)
+        v_concise = (0.6 / (1.5 * 2.9)) * 30 * (1 - 30 / 250)  # MPa
+        assert res.v_rd_max == pytest.approx(
+            v_concise * 300 * (0.9 * 450) / 1e3, rel=1e-12)
+
     @pytest.mark.parametrize("cot", [0.5, 0.99, 2.51, 5.0])
     def test_cot_theta_out_of_range_rejected(self, cot):
         with pytest.raises(ValueError, match="cot"):

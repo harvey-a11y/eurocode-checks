@@ -172,3 +172,41 @@ VRd,max: z=405, nu1=0.528, fcd=30/1.5=20 (alpha_cc=1.0 for shear per PD 6687-1),
 
 VRd,s: asw=157mm2 @ s=200, fywd=434.78, cot(theta)=2.5 -> **345.6 kN**.
 
+## Steel beam plastic shear: 457x191x67 UB, S275
+
+**Check:** plastic shear resistance to EN 1993-1-1 cl. 6.2.6, load
+parallel to the web (UK NA, gamma_M0 = 1.0).
+
+Section properties (SCI Blue Book): A = 85.5 cm^2 = 8550 mm^2,
+h = 453.4 mm, b = 189.9 mm, tw = 8.5 mm, tf = 12.7 mm, r = 10.2 mm.
+
+**Shear area (cl. 6.2.6(3)a):**
+
+    Av = A - 2 b tf + (tw + 2 r) tf
+       = 8550 - 2 * 189.9 * 12.7 + (8.5 + 20.4) * 12.7
+       = 8550 - 4823.5 + 367.0
+       = 4093.6 mm^2
+
+    Floor check, Av >= eta hw tw with eta = 1.0
+    (UK NA to EN 1993-1-5, NA.2.4):
+
+    hw = h - 2 tf = 453.4 - 25.4 = 428.0 mm
+    eta hw tw = 1.0 * 428.0 * 8.5 = 3638.0 mm^2
+
+    3638.0 < 4093.6  ->  the floor does NOT govern, Av = 4093.6 mm^2.
+    (With the EN 1993-1-5 recommended eta = 1.2 the floor would be
+    4365.6 mm^2 and would govern; the UK NA value is used here.)
+
+**Resistance:**
+
+    Vpl,Rd = Av (fy / sqrt(3)) / gamma_M0
+           = 4093.6 * (275 / 1.7321) / 1.0
+           = 4093.6 * 158.77
+           = 649,942 N = **649.9 kN**
+
+This is consistent with the published Blue Book shear resistance for
+this section in S275 (approximately 650 kN).
+
+Test assertion: `Vpl,Rd within 0.5% of 649.9 kN` (`tests/test_ec3.py`).
+Library output: 649.94 kN.
+
