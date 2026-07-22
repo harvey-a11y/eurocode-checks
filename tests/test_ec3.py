@@ -5,7 +5,7 @@ import math
 import pytest
 
 from eurocheck import ec3_member
-from eurocheck.sections import get_section, list_sections
+from eurocheck.sections import Section, get_section, list_sections
 
 
 class TestClassification:
@@ -60,12 +60,50 @@ class TestMomentResistance:
 
 class TestShearResistance:
     def test_shear_area_formula(self):
-        """Av = A - 2 b tf + (tw + 2r) tf for the 457x191x67 UB."""
+        """457x191x67 UB: Av = A - 2 b tf + (tw + 2r) tf = 4093.6 mm^2
+        governs over the cl. 6.2.6(3)a floor eta*hw*tw
+        = 1.0 * 428.0 * 8.5 = 3638.0 mm^2 (eta = 1.0, UK NA to
+        EN 1993-1-5 NA.2.4)."""
         sec = get_section("457x191x67 UB")
         res = ec3_member.shear_resistance(sec, 275)
         av_hand = 8550.0 - 2 * 189.9 * 12.7 + (8.5 + 2 * 10.2) * 12.7
+        av_floor_hand = 1.0 * (453.4 - 2 * 12.7) * 8.5
+        assert res.av_formula == pytest.approx(av_hand, rel=1e-12)
+        assert res.av_floor == pytest.approx(av_floor_hand, rel=1e-12)
+        assert not res.floor_governs
         assert res.av == pytest.approx(av_hand, rel=1e-12)
         assert res.vpl_rd == pytest.approx(av_hand * 275 / math.sqrt(3) / 1e3,
+                                           rel=1e-12)
+
+    def test_floor_never_governs_for_database_sections(self):
+        """With the UK NA eta = 1.0, hand arithmetic shows the formula
+        exceeds the bare-web floor for all three library sections:
+
+            305x165x40 UB: 2006.8 > 283.0 * 6.0 = 1698.0
+            203x203x46 UC: 1694.4 > 181.2 * 7.2 = 1304.6
+            457x191x67 UB: 4093.6 > 428.0 * 8.5 = 3638.0
+        """
+        for sec in list_sections():
+            res = ec3_member.shear_resistance(sec, 275)
+            assert not res.floor_governs
+            assert res.av == pytest.approx(res.av_formula, rel=1e-12)
+
+    def test_floor_governs_synthetic_section(self):
+        """Exercise the cl. 6.2.6(3)a floor branch with a made-up
+        thin-flange section where hw*tw exceeds the formula Av:
+
+            formula = 7000 - 2*200*10 + (10 + 20)*10 = 3300 mm^2
+            floor   = 1.0 * (400 - 20) * 10         = 3800 mm^2 -> governs
+        """
+        sec = Section(name="synthetic", kind="UB", A=7000.0, h=400.0,
+                      b=200.0, tw=10.0, tf=10.0, r=10.0, Iy=1.0e8,
+                      Iz=1.0e7, Wpl_y=1.0e6, Wel_y=9.0e5)
+        res = ec3_member.shear_resistance(sec, 275)
+        assert res.av_formula == pytest.approx(3300.0, rel=1e-12)
+        assert res.av_floor == pytest.approx(3800.0, rel=1e-12)
+        assert res.floor_governs
+        assert res.av == pytest.approx(3800.0, rel=1e-12)
+        assert res.vpl_rd == pytest.approx(3800.0 * 275 / math.sqrt(3) / 1e3,
                                            rel=1e-12)
 
 

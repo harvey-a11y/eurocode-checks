@@ -36,6 +36,23 @@ def test_ec3_beam_and_shear_smoke(capsys):
     assert main(["sections"]) == 0
 
 
+def test_ec2_shear_incomplete_links_is_error(capsys):
+    """Giving only one of --asw/--s must be a hard error, not silently
+    ignored link input."""
+    rc = main(["ec2-shear", "--b", "300", "--d", "450", "--fck", "30",
+               "--asl", "1470", "--asw", "157"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--asw and --s must be given together" in captured.err
+    assert "VRd,c" not in captured.out
+
+    rc = main(["ec2-shear", "--b", "300", "--d", "450", "--fck", "30",
+               "--asl", "1470", "--s", "200"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert "--asw and --s must be given together" in captured.err
+
+
 def test_unknown_section_is_error(capsys):
     rc = main(["ec3-column", "--section", "999x999x999UC",
                "--fy", "275", "--lcr", "4.0", "--axis", "z"])

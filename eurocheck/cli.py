@@ -38,6 +38,11 @@ def _cmd_ec2_beam(args: argparse.Namespace) -> int:
 
 
 def _cmd_ec2_shear(args: argparse.Namespace) -> int:
+    if (args.asw is None) != (args.s is None):
+        print("error: --asw and --s must be given together (got only one; "
+              "supply both for a link check, or neither for VRd,c only)",
+              file=sys.stderr)
+        return 2
     con = ec2_beam.shear_concrete(args.b, args.d, args.fck, args.asl)
     print("EC2 beam shear (EN 1992-1-1 + UK NA)")
     print(f"  section     b = {args.b:g} mm, d = {args.d:g} mm, "
@@ -73,7 +78,9 @@ def _cmd_ec3_beam(args: argparse.Namespace) -> int:
     print(f"  section class {cls.section_class} -> {mom.modulus} governs")
     print(f"  Mc,Rd  = {mom.mc_rd:.1f} kNm   "
           f"(no LTB check: valid for fully restrained beams only)")
-    print(f"  Av     = {shr.av:.0f} mm^2")
+    av_src = ("eta*hw*tw floor, cl. 6.2.6(3)a" if shr.floor_governs
+              else "A - 2*b*tf + (tw + 2r)*tf")
+    print(f"  Av     = {shr.av:.0f} mm^2   ({av_src} governs)")
     print(f"  Vpl,Rd = {shr.vpl_rd:.1f} kN")
     print(f"  note: {_DISCLAIMER}")
     return 0

@@ -26,6 +26,10 @@ from .sections import Section
 E_STEEL = 210000.0    # Young's modulus, MPa (cl. 3.2.6)
 GAMMA_M0 = 1.0        # UK NA
 GAMMA_M1 = 1.0        # UK NA
+ETA_SHEAR = 1.0       # shear area factor eta, UK NA to EN 1993-1-5
+#                       (NA.2.4), used in the cl. 6.2.6(3)a floor
+#                       Av >= eta * hw * tw. EN 1993-1-5 cl. 5.1(2)
+#                       recommends 1.2 for S235-S460 outside the UK.
 
 #: Imperfection factor alpha for each buckling curve (Table 6.1).
 IMPERFECTION = {"a0": 0.13, "a": 0.21, "b": 0.34, "c": 0.49, "d": 0.76}
@@ -126,19 +130,34 @@ def moment_resistance(section: Section, fy: float) -> MomentResistance:
 class ShearResistance:
     """Plastic shear resistance (cl. 6.2.6)."""
 
-    av: float                 # shear area, mm^2
+    av_formula: float         # A - 2 b tf + (tw + 2 r) tf, mm^2
+    av_floor: float           # eta * hw * tw floor, cl. 6.2.6(3)a, mm^2
+    av: float                 # governing shear area = max of the two, mm^2
+    floor_governs: bool
     vpl_rd: float             # kN
 
 
 def shear_resistance(section: Section, fy: float) -> ShearResistance:
     """``Vpl,Rd = Av (fy / sqrt(3)) / gamma_M0`` for a rolled I-section
-    loaded parallel to the web, with
-    ``Av = A - 2 b tf + (tw + 2 r) tf``.
+    loaded parallel to the web (cl. 6.2.6(3)a):
+
+    * ``Av = A - 2 b tf + (tw + 2 r) tf``, but not less than
+    * ``eta hw tw`` with ``hw = h - 2 tf`` and ``eta = 1.0``
+      (UK NA to EN 1993-1-5, NA.2.4; EN 1993-1-5 cl. 5.1(2) recommends
+      ``eta = 1.2`` for S235-S460 where no National Annex applies).
+
+    With ``eta = 1.0`` the floor does not govern for any section in this
+    database (the flange-deduction formula always exceeds the bare web
+    area ``hw tw``), but it is still checked and reported.
     """
     _check_positive(fy=fy)
-    av = (section.A - 2.0 * section.b * section.tf
-          + (section.tw + 2.0 * section.r) * section.tf)
-    return ShearResistance(av=av,
+    av_formula = (section.A - 2.0 * section.b * section.tf
+                  + (section.tw + 2.0 * section.r) * section.tf)
+    hw = section.h - 2.0 * section.tf
+    av_floor = ETA_SHEAR * hw * section.tw
+    av = max(av_formula, av_floor)
+    return ShearResistance(av_formula=av_formula, av_floor=av_floor, av=av,
+                           floor_governs=av_floor > av_formula,
                            vpl_rd=av * (fy / math.sqrt(3.0)) / GAMMA_M0 / 1.0e3)
 
 
