@@ -217,6 +217,11 @@ def shear_links(b: float, d: float, fck: float, fywk: float, asw: float,
 
     ``asw`` is the link area per set (all legs crossing the shear plane),
     ``s`` the link spacing.
+
+    Note: per PD 6687-1 (UK guidance to EN 1992-1-1), ``alpha_cc = 1.0`` is
+    adopted for the shear crushing limit — the 0.85 factor relates to
+    sustained flexural/axial compression, so ``VRd,max`` uses
+    ``fcd = fck / 1.5`` here (flexure elsewhere keeps 0.85).
     """
     _check_positive(b=b, d=d, fywk=fywk, asw=asw, s=s)
     _check_fck(fck)
@@ -230,7 +235,8 @@ def shear_links(b: float, d: float, fck: float, fywk: float, asw: float,
     fywd = fywk / GAMMA_S
     nu1 = 0.6 * (1.0 - fck / 250.0)
     v_rd_s = (asw / s) * z * fywd * cot_theta / 1.0e3
-    v_rd_max = (b * z * nu1 * f_cd(fck) * cot_theta
+    fcd_shear = fck / GAMMA_C   # alpha_cc = 1.0 for shear (PD 6687-1)
+    v_rd_max = (b * z * nu1 * fcd_shear * cot_theta
                 / (1.0 + cot_theta ** 2) / 1.0e3)
     return ShearLinks(z=z, nu1=nu1, cot_theta=cot_theta,
                       v_rd_s=v_rd_s, v_rd_max=v_rd_max,

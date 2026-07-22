@@ -119,9 +119,9 @@ class TestShearLinks:
         z = 0.9 * 450
         fywd = 500 / 1.15
         nu1 = 0.6 * (1 - 30 / 250)
-        fcd = 0.85 * 30 / 1.5
+        fcd_shear = 30 / 1.5   # alpha_cc = 1.0 for shear crushing (PD 6687-1)
         vrds = (157 / 200) * z * fywd * 2.5 / 1e3
-        vrdmax = 300 * z * nu1 * fcd * 2.5 / (1 + 2.5**2) / 1e3
+        vrdmax = 300 * z * nu1 * fcd_shear * 2.5 / (1 + 2.5**2) / 1e3
         assert res.v_rd_s == pytest.approx(vrds, rel=1e-12)
         assert res.v_rd_max == pytest.approx(vrdmax, rel=1e-12)
         assert res.v_rd == pytest.approx(min(vrds, vrdmax), rel=1e-12)

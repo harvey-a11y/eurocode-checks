@@ -163,3 +163,12 @@ hold for any input:
 * `cot(theta)` outside [1.0, 2.5] and `fck > 50` raise `ValueError`.
 * Buckling curve selection follows Table 6.2 for both the `h/b > 1.2`
   (305x165x40 UB: a/b) and `h/b <= 1.2` (203x203x46 UC: b/c) branches.
+
+## Shear anchors (added 22 Jul 2026)
+
+VRd,c: b=300, d=450, fck=30, Asl=1147mm2 -> k=1.6667, rho_l=0.008496, (100*rho_l*fck)^(1/3)=2.943, VRd,c = 0.12*1.6667*2.943*300*450/1e3 = **79.5 kN** (v_min=0.412 MPa does not govern).
+
+VRd,max: z=405, nu1=0.528, fcd=30/1.5=20 (alpha_cc=1.0 for shear per PD 6687-1), cot(theta)=2.5 -> VRd,max = 300*405*0.528*20*2.5/7.25/1e3 = **442.4 kN**.
+
+VRd,s: asw=157mm2 @ s=200, fywd=434.78, cot(theta)=2.5 -> **345.6 kN**.
+
